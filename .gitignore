@@ -1,0 +1,23 @@
+# Node
+node_modules/
+*.log
+
+# Build output (Electron Forge / Webpack)
+app/.webpack/
+app/out/
+app/release/
+app/.build/
+app/qa/
+
+# Source assets (keep the repo lean; regenerate with the builder pipeline)
+asset-source/
+app/incoming-assets/
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
