@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ender Coder</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    #dashboard {
+      width: 100%;
+      height: 100%;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .card {
+      background: var(--surface, #ffffff);
+      border-radius: var(--radius, 24px);
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+      padding-right: 40px;
+    }
+    .pet-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--background, #fff5fa);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+    .pet-info h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text, #221a1f);
+      margin-bottom: 4px;
+    }
+    .pet-info p {
+      font-size: 13px;
+      color: var(--muted, #a98898);
+    }
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 999px;
+      background: var(--background, #fff5fa);
+      color: var(--muted, #a98898);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: var(--primary, #f2569a);
+      color: #fff;
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-item {
+      background: var(--background, #fff5fa);
+      border-radius: 16px;
+      padding: 14px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted, #a98898);
+      margin-bottom: 6px;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text, #221a1f);
+    }
+    .stat-value small {
+      font-size: 12px;
+      font-weight: normal;
+      color: var(--muted, #a98898);
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text, #221a1f);
+      margin-bottom: 12px;
+    }
+    .interactions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .interaction-btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--background, #fff5fa);
+      color: var(--text, #221a1f);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .interaction-btn:hover {
+      background: var(--accent, #ffc2dd);
+      transform: translateY(-1px);
+    }
+    .settings-group {
+      margin-bottom: 16px;
+    }
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--background, #fff5fa);
+    }
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+    .setting-label {
+      font-size: 14px;
+      color: var(--text, #221a1f);
+    }
+    .setting-desc {
+      font-size: 12px;
+      color: var(--muted, #a98898);
+    }
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--muted, #a98898);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .toggle.active {
+      background: var(--primary, #f2569a);
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .toggle.active::after {
+      transform: translateX(20px);
+    }
+    .size-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .size-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--accent, #ffc2dd);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text, #221a1f);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .size-btn.active {
+      background: var(--primary, #f2569a);
+      border-color: var(--primary, #f2569a);
+      color: white;
+    }
+    .lang-selector {
+      display: flex;
+      gap: 8px;
+    }
+    .lang-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--accent, #ffc2dd);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text, #221a1f);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .lang-btn.active {
+      background: var(--primary, #f2569a);
+      border-color: var(--primary, #f2569a);
+      color: white;
+    }
+    .agent-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--background, #fff5fa);
+    }
+    .agent-row:last-child {
+      border-bottom: none;
+    }
+    .agent-status-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text, #221a1f);
+      margin-bottom: 12px;
+      min-height: 20px;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted, #a98898);
+      flex-shrink: 0;
+    }
+    .status-dot.active {
+      background: var(--primary, #f2569a);
+      box-shadow: 0 0 0 4px var(--accent, #ffc2dd);
+    }
+    .event-list {
+      max-height: 160px;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .event-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .event-list::-webkit-scrollbar-thumb {
+      background: var(--accent, #ffc2dd);
+      border-radius: 2px;
+    }
+    .event-item {
+      font-size: 12px;
+      color: var(--muted, #a98898);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: var(--background, #fff5fa);
+      border-radius: 8px;
+    }
+    .event-item .time {
+      color: var(--accent, #f2569a);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0;
+    }
+    .event-item .tag {
+      flex-shrink: 0;
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--accent, #ffc2dd);
+      color: var(--text, #221a1f);
+    }
+    .hooks-btn {
+      margin-top: 12px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 12px;
+      background: var(--primary, #f2569a);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .hooks-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .hooks-desc {
+      font-size: 12px;
+      color: var(--muted, #a98898);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+    .about-line {
+      font-size: 14px;
+      color: var(--text, #221a1f);
+      padding: 6px 0;
+    }
+    .about-line .value {
+      color: var(--muted, #a98898);
+    }
+    .close-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--background, #fff5fa);
+      border-radius: 50%;
+      color: var(--muted, #a98898);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+    .close-btn:hover {
+      background: var(--accent, #ffc2dd);
+      color: var(--text, #221a1f);
+    }
+    .content-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .content-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .content-scroll::-webkit-scrollbar-thumb {
+      background: var(--accent, #ffc2dd);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="dashboard">
+    <div class="card" style="position: relative; flex: 1; display: flex; flex-direction: column;">
+      <button class="close-btn" id="close-btn">×</button>
+      <div class="content-scroll">
+        <div class="header">
+          <div class="pet-avatar">👾</div>
+          <div class="pet-info">
+            <h2 id="pet-name">Ender Coder</h2>
+            <p id="pet-personality"></p>
+          </div>
+        </div>
+
+        <div class="tabs" id="tabs">
+          <button class="tab-btn active" data-tab="stats">📊</button>
+          <button class="tab-btn" data-tab="agents">🤖</button>
+          <button class="tab-btn" data-tab="settings">⚙️</button>
+          <button class="tab-btn" data-tab="about">ℹ️</button>
+        </div>
+
+        <div class="tab-pane active" id="pane-stats">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="dash.affection">💕 好感度</div>
+              <div class="stat-value" id="affection">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="dash.mood">😊 心情</div>
+              <div class="stat-value" id="mood">80</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="dash.today">🎯 今日互动</div>
+              <div class="stat-value" id="today-interactions">0</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label" data-i18n="dash.companion">⏰ 陪伴时长</div>
+              <div class="stat-value" id="companion-minutes">0<small>分钟</small></div>
+            </div>
+          </div>
+          <div class="settings-group">
+            <div class="section-title" data-i18n="dash.interactions">✨ 互动</div>
+            <div class="interactions" id="interactions-list"></div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-agents">
+          <div class="section-title" data-i18n="dash.agent-monitors">🤖 编程助手监听</div>
+          <div class="agent-row">
+            <div>
+              <div class="setting-label">Claude Code</div>
+              <div class="setting-desc">~/.claude/projects 会话文件</div>
+            </div>
+            <div class="toggle active" id="toggle-claude-code"></div>
+          </div>
+          <div class="agent-row">
+            <div>
+              <div class="setting-label">Codex CLI</div>
+              <div class="setting-desc">~/.codex/sessions 会话文件</div>
+            </div>
+            <div class="toggle active" id="toggle-codex"></div>
+          </div>
+          <div style="margin-top: 14px;">
+            <div class="setting-label" data-i18n="dash.agent-status">📡 当前状态</div>
+            <div class="agent-status-line">
+              <span class="status-dot" id="agent-status-dot"></span>
+              <span id="agent-status-text" data-i18n="dash.no-agent-activity">还没有检测到编程助手活动</span>
+            </div>
+          </div>
+          <div class="section-title" data-i18n="dash.recent-events">🕘 最近事件</div>
+          <div class="event-list" id="agent-events"></div>
+          <button class="hooks-btn" id="install-hooks">Install Claude Code Hooks</button>
+          <div class="hooks-desc" data-i18n="dash.hooks-desc"></div>
+        </div>
+
+        <div class="tab-pane" id="pane-settings">
+          <div class="settings-group">
+            <div class="section-title" data-i18n="dash.settings">⚙️ 设置</div>
+            <div class="setting-item">
+              <div>
+                <div class="setting-label" data-i18n="dash.always-on-top">置顶显示</div>
+                <div class="setting-desc" data-i18n="dash.always-on-top-desc">桌宠窗口始终在最前面</div>
+              </div>
+              <div class="toggle active" id="toggle-always-on-top"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div class="setting-label" data-i18n="dash.click-through">鼠标穿透</div>
+                <div class="setting-desc" data-i18n="dash.click-through-desc">点击穿透到后面的窗口</div>
+              </div>
+              <div class="toggle" id="toggle-click-through"></div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div class="setting-label" data-i18n="dash.size">桌宠大小</div>
+                <div class="setting-desc" data-i18n="dash.size-desc">调整桌宠显示大小</div>
+              </div>
+              <div class="size-selector" id="size-selector">
+                <button class="size-btn" data-scale="0.65" data-i18n="dash.size-small">小</button>
+                <button class="size-btn active" data-scale="0.8" data-i18n="dash.size-standard">标准</button>
+                <button class="size-btn" data-scale="1" data-i18n="dash.size-large">大</button>
+                <button class="size-btn" data-scale="1.2" data-i18n="dash.size-xlarge">超大</button>
+              </div>
+            </div>
+            <div class="setting-item">
+              <div>
+                <div class="setting-label" data-i18n="dash.language">语言</div>
+              </div>
+              <div class="lang-selector" id="lang-selector">
+                <button class="lang-btn" data-lang="zh-CN">中文</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-pane" id="pane-about">
+          <div class="settings-group">
+            <div class="section-title">Ender Coder</div>
+            <div class="about-line"><span class="value" data-i18n="dash.version">版本</span> <span id="about-version"></span></div>
+            <div class="about-line">AGPL-3.0 License</div>
+            <div class="about-line">https://github.com/harrylyu20260808-pixel/ender-coder</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
